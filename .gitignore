@@ -22,5 +22,4 @@ build/
 *.log
 *.tmp
 
-# Uploaded content (if applicable)
-# public/uploads
+
