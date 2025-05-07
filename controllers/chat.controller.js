@@ -37,7 +37,7 @@ const getPartners = async (req, res) => {
               client_id: user.id,
             },
             attributes: ["id", "title", "status"],
-            required: false,
+            required: true,
           },
           {
             model: User,
