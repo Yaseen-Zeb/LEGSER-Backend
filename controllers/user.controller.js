@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const { ROLES, CASE_STATUS } = require("../config/constant");
 const responseHelper = require("../helpers/response.helper");
 const { User, Bidding, Case } = require("../models");
-const { getHashValue } = require("../helpers/hash.helper");
+const { getHashValue, signAccessToken } = require("../helpers/hash.helper");
 
 
 const ping = async (req, res) => {
@@ -190,19 +190,33 @@ const updateLawyerProfile = async (req, res) => {
   try {
     const { id } = req.user;
 
-    const lawyerProfile = await User.update({ ...req.body }, { where: { id } });
+    // Update the user
+    await User.update({ ...req.body }, { where: { id } });
+
+    // Fetch the updated user
+    const updatedUser = await User.findByPk(id);
+
+    // Create a new token with updated data
+    const token = await signAccessToken({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      profile_picture: updatedUser.profile_picture,
+    });
 
     return responseHelper.success(
       res,
-      lawyerProfile,
+      { token },
       "Lawyer profile updated successfully",
       200
     );
   } catch (error) {
-    console.error("Error fetching client:", error);
+    console.error("Error updating lawyer profile:", error);
     return responseHelper.fail(res, error.message, 500);
   }
 };
+
 
 const clientProfile = async (req, res) => {
   try {
@@ -281,48 +295,71 @@ const updateClientProfile = async (req, res) => {
   try {
     const { id } = req.user;
 
-    const lawyerProfile = await User.update({ ...req.body }, { where: { id } });
+    // Update client profile
+    await User.update({ ...req.body }, { where: { id } });
+
+    // Fetch updated user
+    const updatedUser = await User.findByPk(id);
+
+    // Sign a new token
+    const token = await signAccessToken({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      profile_picture: updatedUser.profile_picture,
+    });
 
     return responseHelper.success(
       res,
-      lawyerProfile,
-      "Lawyer profile updated successfully",
+      { token },
+      "Client profile updated successfully",
       200
     );
   } catch (error) {
-    console.error("Error fetching client:", error);
+    console.error("Error updating client profile:", error);
     return responseHelper.fail(res, error.message, 500);
   }
 };
+
 
 const updateProfileImage = async (req, res) => {
   try {
     const { id } = req.user;
 
-    const userData = {
-      profile_picture:
-        req.files && req.files.profile_picture
-          ? req.files.profile_picture[0].path
-          : undefined,
-    };
+    // Extract file path
+    const profilePicture =
+      req.files && req.files.profile_picture
+        ? req.files.profile_picture[0].path
+        : null;
 
-    if (!userData.profile_picture) {
+    if (!profilePicture) {
       return responseHelper.fail(res, "Image not found!", 400);
     }
 
+    // Update profile picture in DB
     await User.update(
-      {
-        profile_picture: userData.profile_picture,
-      },
-      {
-        where: { id },
-      }
+      { profile_picture: profilePicture },
+      { where: { id } }
     );
 
+    // Fetch updated user
+    const updatedUser = await User.findByPk(id);
+
+    // Sign new token with updated info
+    const token = await signAccessToken({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      profile_picture: updatedUser.profile_picture,
+    });
+
+    // Return updated token and message
     return responseHelper.success(
       res,
-      {},
-      "Profile Image updated successfully",
+      { token },
+      "Profile image updated successfully",
       201
     );
   } catch (error) {

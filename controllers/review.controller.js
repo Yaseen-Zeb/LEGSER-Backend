@@ -4,12 +4,13 @@ const { Review, Case, User } = require("../models");
 
 const submitReview = async (req, res) => {
   try {
-    const { lawyer_id, message, case_id } = req.body;
+    const { lawyer_id, case_id, rating, message } = req.body;
     const client_id = req.user.id;
 
     await Review.create({
       lawyer_id,
       message,
+      rating,
       client_id,
     });
 
@@ -58,4 +59,4 @@ const getLawyerReviews = async (req, res) => {
   }
 };
 
-module.exports = { submitReview,getLawyerReviews };
+module.exports = { submitReview, getLawyerReviews };

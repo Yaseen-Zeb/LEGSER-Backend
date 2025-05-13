@@ -6,6 +6,7 @@ const Review = sequelize.define("reviews", {
   client_id: { type: DataTypes.INTEGER, allowNull: false },
   lawyer_id: { type: DataTypes.INTEGER, allowNull: false },
   message: { type: DataTypes.TEXT, allowNull: false },
+  rating: { type: DataTypes.INTEGER, allowNull: false },
 });
 
 Review.associate = (models) => {
